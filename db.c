@@ -22,7 +22,7 @@ typedef struct {
 
 /* META INPUT EXCEPTION HANDLING (non-sql)  */
 typedef enum {
-  META_COMMAND_SUCCESS,
+	META_COMMAND_SUCCESS,
 	META_COMMAND_UNRECOGNIZED_COMMAND
 } MetaCommandResult;
 
@@ -40,13 +40,13 @@ typedef enum {
 
 typedef enum {
 	EXECUTE_SUCCESS,
-  EXECUTE_DUPLICATE_KEY, 
+	EXECUTE_DUPLICATE_KEY, 
 	EXECUTE_TABLE_FULL
 } ExecuteResult; 
 
 typedef enum { 
-  NODE_INTERNAL, 
-  NODE_LEAF
+	NODE_INTERNAL, 
+	NODE_LEAF
   } NodeType;
 
 typedef struct {
@@ -61,22 +61,22 @@ typedef struct {
 } Statement;
 
 typedef struct {
-  int file_descriptor;
-  uint32_t file_length;
-  void* pages[TABLE_MAX_PAGES];
-  uint32_t num_pages;
+	int file_descriptor;
+	uint32_t file_length;
+	void* pages[TABLE_MAX_PAGES];
+	uint32_t num_pages;
 } Pager;
 
 typedef struct {
-  Pager* pager;
-  uint32_t root_page_num;
+	Pager* pager;
+	uint32_t root_page_num;
 } Table;
 
 typedef struct {
-  Table* table;
-  uint32_t page_num;
-  uint32_t cell_num;
-  int end_of_table;
+	Table* table;
+	uint32_t page_num;
+	uint32_t cell_num;
+	int end_of_table;
 } Cursor;
 
 const uint32_t ID_SIZE = size_of_attribute(Row, id);
@@ -200,27 +200,27 @@ void* get_page(Pager* pager, uint32_t page_num) {
 
     pager->pages[page_num] = page;
   }
-  return pager->pages[page_num];
+	return pager->pages[page_num];
 }
 
 uint32_t* leaf_node_key(void* node, uint32_t cell_num) {
-  return leaf_node_cell(node, cell_num);
+	return leaf_node_cell(node, cell_num);
 }
 
 void* leaf_node_value(void* node, uint32_t cell_num) {
-  return leaf_node_cell(node, cell_num) + LEAF_NODE_KEY_SIZE;
+	return leaf_node_cell(node, cell_num) + LEAF_NODE_KEY_SIZE;
 }
 
 void initialize_leaf_node(void* node) { 
-  set_node_type(node, NODE_LEAF);
-  set_node_root(node, false);
-  *leaf_node_num_cells(node) = 0;
+	set_node_type(node, NODE_LEAF);
+	set_node_root(node, false);
+	*leaf_node_num_cells(node) = 0;
 }
 
 void initialize_internal_node(void* node) {
-  set_node_type(node, NODE_INTERNAL);
-  set_node_root(node, false);
-  *internal_node_num_keys(node) = 0;
+	set_node_type(node, NODE_INTERNAL);
+	set_node_root(node, false);
+	*internal_node_num_keys(node) = 0;
 }
 
 Cursor* table_start(Table* table) {
@@ -235,8 +235,6 @@ Cursor* table_start(Table* table) {
 
   return cursor;
 }
-
-
 
 Cursor* leaf_node_find(Table* table, uint32_t page_num, uint32_t key) {
   void* node = get_page(table->pager, page_num);
