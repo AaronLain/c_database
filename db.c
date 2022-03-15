@@ -593,55 +593,55 @@ void deserialize_row(void* source, Row* destination) {
 }
 
 void* cursor_value(Cursor* cursor) {
-  uint32_t page_num = cursor->page_num;
-  void* page = get_page(cursor->table->pager, page_num);
+    uint32_t page_num = cursor->page_num;
+    void* page = get_page(cursor->table->pager, page_num);
 	
-  return leaf_node_value(page, cursor->cell_num);
+    return leaf_node_value(page, cursor->cell_num);
 }
 
 void cursor_advance(Cursor* cursor) {
-  uint32_t page_num = cursor->page_num;
-  void* node = get_page(cursor->table->pager, page_num);
-  cursor->cell_num += 1;
-  if (cursor->cell_num <= (*leaf_node_num_cells(node))) {
-    cursor->end_of_table = 1;
-  }
+    uint32_t page_num = cursor->page_num;
+    void* node = get_page(cursor->table->pager, page_num);
+    cursor->cell_num += 1;
+    if (cursor->cell_num <= (*leaf_node_num_cells(node))) {
+        cursor->end_of_table = 1;
+    }
 }
 
 ExecuteResult execute_insert(Statement* statement, Table* table) {
 	
-  void* node = get_page(table->pager, table->root_page_num);
-  uint32_t num_cells = (*leaf_node_num_cells(node));
+    void* node = get_page(table->pager, table->root_page_num);
+    uint32_t num_cells = (*leaf_node_num_cells(node));
 
 	Row* row_to_insert = &(statement->row_to_insert);
-  uint32_t key_to_insert = row_to_insert->id;
-  Cursor* cursor = table_find(table, key_to_insert);
+    uint32_t key_to_insert = row_to_insert->id;
+    Cursor* cursor = table_find(table, key_to_insert);
 
-  if (cursor->cell_num < num_cells) {
+    if (cursor->cell_num < num_cells) {
     uint32_t key_at_index = *leaf_node_key(node, cursor->cell_num);
     if (key_at_index == key_to_insert) {
       return EXECUTE_DUPLICATE_KEY;
     }
   }
 
-  leaf_node_insert(cursor, row_to_insert->id, row_to_insert);
+    leaf_node_insert(cursor, row_to_insert->id, row_to_insert);
 
-  free(cursor);
+    free(cursor);
 
-	return EXECUTE_SUCCESS;
+    return EXECUTE_SUCCESS;
 }
 
 ExecuteResult execute_select(Statement* statement, Table* table) {
 	Cursor* cursor = table_start(table);
   
-  Row row;
+    Row row;
 	while(!(cursor->end_of_table)) {
-    deserialize_row(cursor_value(cursor), &row);
-    		print_row(&row);
+        deserialize_row(cursor_value(cursor), &row);
+        print_row(&row);
         cursor_advance(cursor);
   }
 
-  free(cursor);
+    free(cursor);
 
 	return EXECUTE_SUCCESS;
 }
@@ -658,12 +658,12 @@ ExecuteResult execute_statement(Statement* statement, Table* table) {
 void print_prompt() { printf("db > "); }
 
 void print_constants() {
-  printf("ROW_SIZE: %d\n", ROW_SIZE);
-  printf("COMMON_NODE_HEADER_SIZE: %d\n", COMMON_NODE_HEADER_SIZE);
-  printf("LEAF_NODE_HEADER_SIZE: %d\n", LEAF_NODE_HEADER_SIZE);
-  printf("LEAF_NODE_CELL_SIZE: %d\n", LEAF_NODE_CELL_SIZE);  
-  printf("LEAF_NODE_SPACE_FOR_CELLS: %d\n", LEAF_NODE_SPACE_FOR_CELLS);
-  printf("LEAF_NODE_MAX_CELLS: %d\n", LEAF_NODE_MAX_CELLS);
+    printf("ROW_SIZE: %d\n", ROW_SIZE);
+    printf("COMMON_NODE_HEADER_SIZE: %d\n", COMMON_NODE_HEADER_SIZE);
+    printf("LEAF_NODE_HEADER_SIZE: %d\n", LEAF_NODE_HEADER_SIZE);
+    printf("LEAF_NODE_CELL_SIZE: %d\n", LEAF_NODE_CELL_SIZE);  
+    printf("LEAF_NODE_SPACE_FOR_CELLS: %d\n", LEAF_NODE_SPACE_FOR_CELLS);
+    printf("LEAF_NODE_MAX_CELLS: %d\n", LEAF_NODE_MAX_CELLS);
 }
 
 ssize_t getline(char **lineptr, size_t *n, FILE *stream);
@@ -687,15 +687,15 @@ void close_input_buffer(InputBuffer* input_buffer) {
 }
 
 int main(int argc, char* argv[]) {
-	if (argc < 2) {
-    printf("Must supply a filename.\n");
-    exit(EXIT_FAILURE);
-  }
+    if (argc < 2) {
+        printf("Must supply a filename.\n");
+        exit(EXIT_FAILURE);
+    }
 
-  char* filename = argv[1];
-  Table* table = db_open(filename);
+    char* filename = argv[1];
+    Table* table = db_open(filename);
   
-  InputBuffer* input_buffer = new_input_buffer();
+    InputBuffer* input_buffer = new_input_buffer();
 	while (1) {
 		print_prompt();
 		read_input(input_buffer);
@@ -725,9 +725,9 @@ int main(int argc, char* argv[]) {
 			case (EXECUTE_SUCCESS):
 				printf("Executed.\n");
 				break;
-      case (EXECUTE_DUPLICATE_KEY):
-        printf("Error: Duplicate key.\n");
-        break;
+            case (EXECUTE_DUPLICATE_KEY):
+                printf("Error: Duplicate key.\n");
+                break;
 			case (EXECUTE_TABLE_FULL):
 				printf("Error: Table fulln\n");
 				break;
