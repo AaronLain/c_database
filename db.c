@@ -422,12 +422,14 @@ void db_close(Table* table) {
 }
 
 const uint32_t LEAF_NODE_RIGHT_SPLIT_COUNT = (LEAF_NODE_MAX_CELLS + 1) / 2;
-const uint32_t LEAF_NODE_LEFT_SPLIT_COUNT = (LEAF_NODE_MAX_CELLS + 1) - LEAF_NODE_RIGHT_SPLIT_COUNT;
+const uint32_t LEAF_NODE_LEFT_SPLIT_COUNT = 
+    (LEAF_NODE_MAX_CELLS + 1) - LEAF_NODE_RIGHT_SPLIT_COUNT;
 
 void create_new_root(Table* table, uint32_t right_child_page_num) {
     /*
-    Handle splitting root
-    Old root copied to new page, becomes left child    address of right child passed in
+    Splitting the root node:
+    The old root is copied to a new page, becomes left child    
+    address of right child is passed in
     re-initialize root page to contain the new root node
     new root node points to two children
     */
@@ -457,7 +459,7 @@ void create_new_root(Table* table, uint32_t right_child_page_num) {
 void leaf_node_split_and_insert(Cursor* cursor, uint32_t key, Row* value) {
     /* 
     Creates new node and moves half the cells over
-    insert the new value in one of the two nodes
+    inserts the new value in one of the two nodes
     update parent or create new parent 
     */
 
@@ -466,10 +468,6 @@ void leaf_node_split_and_insert(Cursor* cursor, uint32_t key, Row* value) {
     void* new_node = get_page(cursor->table->pager, new_page_num);
     initialize_leaf_node(new_node);
 
-    // Update cell count on both leaf nodes
-
-    *(leaf_node_num_cells(old_node)) = LEAF_NODE_LEFT_SPLIT_COUNT;
-    *(leaf_node_num_cells(new_node)) = LEAF_NODE_RIGHT_SPLIT_COUNT;
 
     /*
     all existing keys plus new key should be divided evenly
@@ -496,6 +494,11 @@ void leaf_node_split_and_insert(Cursor* cursor, uint32_t key, Row* value) {
             memcpy(destination, leaf_node_cell(old_node, i), LEAF_NODE_CELL_SIZE);
         }
 
+        // Update cell count on both leaf nodes
+
+        *(leaf_node_num_cells(old_node)) = LEAF_NODE_LEFT_SPLIT_COUNT;
+        *(leaf_node_num_cells(new_node)) = LEAF_NODE_RIGHT_SPLIT_COUNT;
+        
         if (is_node_root(old_node)) {
             return create_new_root(cursor->table, new_page_num);
         } else {
@@ -582,7 +585,7 @@ void print_tree(Pager* pager, uint32_t page_num, uint32_t indentation_level) {
             child = *internal_node_right_child(node);
             print_tree(pager, child, indentation_level + 1);
         break;
-  }
+    }
 }
 
 void print_leaf_node(void* node) {
