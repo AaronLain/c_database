@@ -242,18 +242,14 @@ void initialize_internal_node(void* node) {
 }
 
 Cursor* table_start(Table* table) {
-    Cursor* cursor = malloc(sizeof(Cursor));
-    cursor->table = table;
-    cursor->page_num = table->root_page_num;
-    cursor->cell_num = 0;
+    Cursor* cursor = table_find(table, 0);
 
-    void* root_node = get_page(table->pager, table->root_page_num);
-    uint32_t num_cells = *leaf_node_num_cells(root_node);
+    void* node = get_page(table->pager, cursor->page_num);
+    uint32_t num_cells = *leaf_node_num_cells(node);
     cursor->end_of_table = (num_cells == 0);
 
     return cursor;
 }
-
 
 Cursor* leaf_node_find(Table* table, uint32_t page_num, uint32_t key) {
     void* node = get_page(table->pager, page_num);
@@ -308,6 +304,34 @@ uint32_t get_node_max_key(void* node) {
     }
 }
 
+Cursor* internal_node_find(Table* table, uint32_t page_num, uint32_t key) {
+    void* node = get_page(table->pager, page_num);
+    uint32_t num_keys = *internal_node_num_keys(node);
+
+    // Binary search to find the correct index of child to search
+    uint32_t min_index = 0;
+    uint32_t max_index = num_keys; // there is one more child than key
+
+    while (min_index != max_index) {
+        uint32_t index = (min_index + max_index) / 2;
+        uint32_t key_to_right = *internal_node_key(node, index);
+        if (key_to_right >= key) {
+            max_index = index;
+        } else {
+            min_index = index + 1;
+        }
+    }
+
+    uint32_t child_num = *internal_node_child(node, min_index);
+    void* child = get_page(table->pager, child_num);
+    switch (get_node_type(child)) {
+        case NODE_LEAF:
+            return leaf_node_find(table, child_num, key);
+        case NODE_INTERNAL:
+            return internal_node_find(table, child_num, key);
+    }
+}
+
 Cursor* table_find(Table* table, uint32_t key) {
     uint32_t root_page_num = table->root_page_num;
     void* root_node = get_page(table->pager, root_page_num);
@@ -315,9 +339,10 @@ Cursor* table_find(Table* table, uint32_t key) {
     if (get_node_type(root_node) == NODE_LEAF) {
         return leaf_node_find(table, root_page_num, key);
     } else {
-        return inernal_node_find(table, root_page_num, key);
+        return internal_node_find(table, root_page_num, key);
     }
 }
+
 
 uint32_t get_unused_page_num(Pager* pager) { return pager->num_pages; }
 
@@ -449,7 +474,7 @@ void create_new_root(Table* table, uint32_t right_child_page_num) {
     set_node_root(root, true);
     *internal_node_num_keys(root) = 1;
     *internal_node_child(root, 0) = left_child_page_num;
-    uint32_t left_child_max_key = get_node_max_key;
+    uint32_t left_child_max_key = get_node_max_key(left_child);
     *internal_node_key(root, 0) = left_child_max_key;
     *internal_node_right_child(root) = right_child_page_num;
 
@@ -770,7 +795,7 @@ int main(int argc, char* argv[]) {
                 printf("Error: Duplicate key.\n");
                 break;
 			case (EXECUTE_TABLE_FULL):
-				printf("Error: Table fulln\n");
+				printf("Error: Table full\n");
 				break;
 		}
 	}
