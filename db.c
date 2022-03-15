@@ -501,6 +501,7 @@ void leaf_node_split_and_insert(Cursor* cursor, uint32_t key, Row* value) {
     uint32_t new_page_num = get_unused_page_num(cursor->table->pager);
     void* new_node = get_page(cursor->table->pager, new_page_num);
     initialize_leaf_node(new_node);
+    // *node_parent(new_node) = *node_parent(old_node);
     *leaf_node_next_leaf(new_node) = *leaf_node_next_leaf(old_node);
     *leaf_node_next_leaf(old_node) = new_page_num;
 
@@ -510,7 +511,7 @@ void leaf_node_split_and_insert(Cursor* cursor, uint32_t key, Row* value) {
     starting from the right, move each key to correct position
     */
 
-    for (int32_t i = LEAF_NODE_MAX_CELLS; i>=0; i--) {
+    for (int32_t i = LEAF_NODE_MAX_CELLS; i >= 0; i--) {
         void* destination_node;
         if (i >= LEAF_NODE_LEFT_SPLIT_COUNT) {
             destination_node = new_node;
@@ -525,7 +526,7 @@ void leaf_node_split_and_insert(Cursor* cursor, uint32_t key, Row* value) {
             serialize_row(value, leaf_node_value(destination_node, index_within_node));
             *leaf_node_key(destination_node, index_within_node) = key;
         } else if (i < cursor->cell_num) {
-            memcpy(destination, leaf_node_cell(old_node, i - 1), LEAF_NODE_NUM_CELLS_SIZE);
+            memcpy(destination, leaf_node_cell(old_node, i - 1)i, LEAF_NODE_CELL_SIZE);
         } else {
             memcpy(destination, leaf_node_cell(old_node, i), LEAF_NODE_CELL_SIZE);
         }
