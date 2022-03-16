@@ -99,19 +99,36 @@ const uint32_t IS_ROOT_SIZE = sizeof(uint8_t);
 const uint32_t IS_ROOT_OFFSET = NODE_TYPE_SIZE;
 const uint32_t PARENT_POINTER_SIZE = sizeof(uint32_t);
 const uint32_t PARENT_POINTER_OFFSET = IS_ROOT_OFFSET + IS_ROOT_SIZE;
-const uint8_t COMMON_NODE_HEADER_SIZE = NODE_TYPE_SIZE + IS_ROOT_SIZE + PARENT_POINTER_SIZE;
+const uint8_t  COMMON_NODE_HEADER_SIZE = 
+    NODE_TYPE_SIZE + IS_ROOT_SIZE + PARENT_POINTER_SIZE;
+
+// Internal Node Header Layout
+
+const uint32_t INTERNAL_NODE_NUM_KEYS_SIZE = sizeof(uint32_t);
+const uint32_t INTERNAL_NODE_NUM_KEYS_OFFSET = COMMON_NODE_HEADER_SIZE;
+const uint32_t INTERNAL_NODE_RIGHT_CHILD_SIZE = sizeof(uint32_t);
+const uint32_t INTERNAL_NODE_RIGHT_CHILD_OFFSET = 
+    INTERNAL_NODE_NUM_KEYS_OFFSET + INTERNAL_NODE_NUM_KEYS_SIZE;
+const uint32_t INTERNAL_NODE_HEADER_SIZE = COMMON_NODE_HEADER_SIZE + 
+                                           INTERNAL_NODE_NUM_KEYS_SIZE + 
+                                           INTERNAL_NODE_RIGHT_CHILD_SIZE;
+
+// Internal Node Body Layout
+
+const uint32_t INTERNAL_NODE_KEY_SIZE = sizeof(uint32_t);
+const uint32_t INTERNAL_NODE_CHILD_SIZE = sizeof(uint32_t);
+const uint32_t INTERNAL_NODE_CELL_SIZE = INTERNAL_NODE_CHILD_SIZE + INTERNAL_NODE_KEY_SIZE;
 
 // Leaf Node Header Layout
 
 const uint32_t LEAF_NODE_NUM_CELLS_SIZE = sizeof(uint32_t);
 const uint32_t LEAF_NODE_NUM_CELLS_OFFSET = COMMON_NODE_HEADER_SIZE;
 const uint32_t LEAF_NODE_NEXT_LEAF_SIZE = sizeof(uint32_t);
-const uint32_t LEAF_NODE_NEXT_LEAF_OFFSET = 
-    LEAF_NODE_NUM_CELLS_OFFSET + LEAF_NODE_NUM_CELLS_SIZE;
-const uint32_t LEAF_NODE_HEADER_SIZE = 
-    COMMON_NODE_HEADER_SIZE + 
-    LEAF_NODE_NUM_CELLS_SIZE +
-    LEAF_NODE_NEXT_LEAF_SIZE;
+const uint32_t LEAF_NODE_NEXT_LEAF_OFFSET = LEAF_NODE_NUM_CELLS_OFFSET + 
+                                            LEAF_NODE_NUM_CELLS_SIZE;
+const uint32_t LEAF_NODE_HEADER_SIZE = COMMON_NODE_HEADER_SIZE + 
+                                       LEAF_NODE_NUM_CELLS_SIZE +
+                                       LEAF_NODE_NEXT_LEAF_SIZE;
 
 // Leaf Node Body Layout
 
@@ -122,22 +139,6 @@ const uint32_t LEAF_NODE_VALUE_OFFSET = LEAF_NODE_KEY_OFFSET + LEAF_NODE_KEY_SIZ
 const uint32_t LEAF_NODE_CELL_SIZE = LEAF_NODE_KEY_SIZE + LEAF_NODE_VALUE_SIZE;
 const uint32_t LEAF_NODE_SPACE_FOR_CELLS = PAGE_SIZE - LEAF_NODE_HEADER_SIZE;
 const uint32_t LEAF_NODE_MAX_CELLS = LEAF_NODE_SPACE_FOR_CELLS / LEAF_NODE_CELL_SIZE;
-
-// Internal Node Header Layout
-
-const uint32_t INTERNAL_NODE_NUM_KEYS_SIZE = sizeof(uint32_t);
-const uint32_t INTERNAL_NODE_NUM_KEYS_OFFSET = COMMON_NODE_HEADER_SIZE;
-const uint32_t INTERNAL_NODE_RIGHT_CHILD_SIZE = sizeof(uint32_t);
-const uint32_t INTERNAL_NODE_RIGHT_CHILD_OFFSET = 
-    INTERNAL_NODE_NUM_KEYS_OFFSET + INTERNAL_NODE_NUM_KEYS_SIZE;
-const uint32_t INTERNAL_NODE_HEADER_SIZE = 
-    COMMON_NODE_HEADER_SIZE + INTERNAL_NODE_NUM_KEYS_SIZE + INTERNAL_NODE_RIGHT_CHILD_SIZE;
-
-// Internal Node Body Layout
-
-const uint32_t INTERNAL_NODE_KEY_SIZE = sizeof(uint32_t);
-const uint32_t INTERNAL_NODE_CHILD_SIZE = sizeof(uint32_t);
-const uint32_t INTERNAL_NODE_CELL_SIZE = INTERNAL_NODE_CHILD_SIZE + INTERNAL_NODE_KEY_SIZE;
 
 uint32_t* leaf_node_next_leaf(void* node) {
     return node + LEAF_NODE_NEXT_LEAF_OFFSET;
@@ -530,20 +531,20 @@ void leaf_node_split_and_insert(Cursor* cursor, uint32_t key, Row* value) {
         } else {
             memcpy(destination, leaf_node_cell(old_node, i), LEAF_NODE_CELL_SIZE);
         }
+    }
 
         // Update cell count on both leaf nodes
-
-        *(leaf_node_num_cells(old_node)) = LEAF_NODE_LEFT_SPLIT_COUNT;
-        *(leaf_node_num_cells(new_node)) = LEAF_NODE_RIGHT_SPLIT_COUNT;
+    *(leaf_node_num_cells(old_node)) = LEAF_NODE_LEFT_SPLIT_COUNT;
+    *(leaf_node_num_cells(new_node)) = LEAF_NODE_RIGHT_SPLIT_COUNT;
         
-        if (is_node_root(old_node)) {
-            return create_new_root(cursor->table, new_page_num);
-        } else {
-            printf("Need to implement updating parent after split\n");
-            exit(EXIT_FAILURE);
-        }
+    if (is_node_root(old_node)) {
+        return create_new_root(cursor->table, new_page_num);
+    } else {
+        printf("Need to implement updating parent after split\n");
+        exit(EXIT_FAILURE);
     }
 }
+
 
 
 void leaf_node_insert(Cursor* cursor, uint32_t key, Row* value) {
